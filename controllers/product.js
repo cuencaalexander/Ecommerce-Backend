@@ -8,15 +8,17 @@ const category = require("../models/category");
 const { ESRCH } = require("constants");
 
 exports.productById = (req, res, next, id) => {
-  Product.findById(id).exec((err, product) => {
-    if (err || !product) {
-      return res.status(400).json({
-        error: "Product not found.",
-      });
-    }
-    req.product = product;
-    next();
-  });
+  Product.findById(id)
+    .populate("category")
+    .exec((err, product) => {
+      if (err || !product) {
+        return res.status(400).json({
+          error: "Product not found.",
+        });
+      }
+      req.product = product;
+      next();
+    });
 };
 
 exports.read = (req, res) => {
@@ -156,7 +158,7 @@ exports.list = (req, res) => {
   let limit = req.query.limit ? parseInt(req.query.limit) : 6; //a number in string type comes from the url query, we need to convert that string into a number type.
   Product.find()
     .select("-photo")
-    .populate("Category") //the category field will be filled with category doc corresponding to the obj ID of the current user?
+    .populate("category") //the category field will be filled with category doc corresponding to the obj ID of the current user?
     .sort([[sortBy, order]])
     .limit(limit)
     .exec((err, products) => {
@@ -170,14 +172,14 @@ exports.list = (req, res) => {
 };
 
 // It will find the products based on the req product category
-// other prodcuts that have the same category, will be returned
+// other products that have the same category will be returned but not the original product.
 
 exports.listRelated = (req, res) => {
   let limit = req.query.limit ? parseInt(req.query.limit) : 6;
 
   Product.find({ _id: { $ne: req.product }, category: req.product.category }) //$ne means not including req.prod w particular _id
     .limit(limit)
-    .populate("Category", "_id name") //populate only certain fields
+    .populate("category", "_id name") //populate only certain fields
     .exec((err, products) => {
       if (err) {
         return res.status(400).json({
