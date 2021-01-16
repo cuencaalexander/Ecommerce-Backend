@@ -1,7 +1,6 @@
 const User = require('../models/user');
 
 exports.userById = (req, res, next, id) => {//id comes fro the route parameter, the id is the userId from the param
-    console.log('HEYE')
     User.findById(id).exec((err, user) => {
         if (err || !user) {
             return res.status(400).json({
